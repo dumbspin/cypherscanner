@@ -16,9 +16,13 @@ import { motion, AnimatePresence } from "framer-motion";
  * Dark placeholder shown when no screenshot_url is provided (API key missing)
  * or when the image fails to load from ScreenshotOne.
  *
- * @param {string} caption - Optional URL caption shown below placeholder
+ * @param {object} props
+ * @param {string} props.caption - Optional URL caption shown below placeholder
+ * @param {'missing-key' | 'load-error'} [props.errorType] - The type of error that occurred
  */
-function UnavailablePlaceholder({ caption }) {
+function UnavailablePlaceholder({ caption, errorType = "missing-key" }) {
+  const isLoadError = errorType === "load-error";
+
   return (
     <div className="card">
       <h3 className="text-text-primary font-semibold mb-4 flex items-center gap-2">
@@ -40,9 +44,19 @@ function UnavailablePlaceholder({ caption }) {
             <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </div>
-        <p className="text-text-muted text-sm font-medium">Preview unavailable</p>
+        <p className="text-text-muted text-sm font-medium">
+          {isLoadError ? "Failed to load preview" : "Preview unavailable"}
+        </p>
         <p className="text-text-muted/60 text-xs text-center max-w-xs px-4">
-          Add a <span className="font-mono text-accent/70">SCREENSHOTONE_API_KEY</span> to enable live page previews.
+          {isLoadError ? (
+            <>
+              Check your <span className="font-mono text-accent/70">SCREENSHOTONE_API_KEY</span> validity or monthly quota.
+            </>
+          ) : (
+            <>
+              Add a <span className="font-mono text-accent/70">SCREENSHOTONE_API_KEY</span> to enable live page previews.
+            </>
+          )}
         </p>
       </div>
 
@@ -59,12 +73,12 @@ export default function ScreenshotPreview({ screenshotUrl, targetUrl }) {
 
   // No API key configured — show dark placeholder immediately.
   if (!screenshotUrl) {
-    return <UnavailablePlaceholder caption={targetUrl} />;
+    return <UnavailablePlaceholder caption={targetUrl} errorType="missing-key" />;
   }
 
-  // Image failed to load — show dark placeholder.
+  // Image failed to load — show dark placeholder with specific error.
   if (error) {
-    return <UnavailablePlaceholder caption={targetUrl} />;
+    return <UnavailablePlaceholder caption={targetUrl} errorType="load-error" />;
   }
 
   return (

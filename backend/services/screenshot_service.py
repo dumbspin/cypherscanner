@@ -28,7 +28,7 @@ def get_screenshot_url(normalised_url: str) -> Optional[str]:
         A fully-formed ScreenshotOne API request URL string, or None if
         the SCREENSHOTONE_API_KEY environment variable is not set.
     """
-    api_key = os.getenv("SCREENSHOTONE_API_KEY", "")
+    api_key = os.getenv("SCREENSHOTONE_API_KEY", "").strip()
 
     if not api_key:
         # Return None gracefully when the API key is missing.
