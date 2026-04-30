@@ -15,8 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from bot.db.models import add_report, get_db, hotspots, init_db
-from utils.external_checker import ExternalCheckerError, analyze_via_external_service
-from utils.url_analyzer import UrlValidationError, classify_url, normalize_url
+from bot.utils.external_checker import ExternalCheckerError, analyze_via_external_service
+from bot.utils.url_analyzer import UrlValidationError, classify_url, normalize_url
 
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

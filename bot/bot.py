@@ -21,8 +21,8 @@ from telegram.ext import (
     filters,
 )
 
-from utils.url_analyzer import UrlValidationError, classify_message, normalize_url
-from utils.external_checker import ExternalCheckerError, analyze_via_external_service
+from bot.utils.url_analyzer import UrlValidationError, classify_message, normalize_url
+from bot.utils.external_checker import ExternalCheckerError, analyze_via_external_service
 
 
 # Load repo-root .env explicitly (prevents accidentally loading other apps' .env files).
