@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartShield — Phishing Hotspot Intelligence</title>
+    <meta
+      name="description"
+      content="AI-driven phishing hotspot intelligence dashboard for Uttarakhand. Real-time cybersecurity threat visualization by SmartShield."
+    />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- Auth Guard: redirect if not logged in -->
+    <script>
+      (function() {
+        var token = localStorage.getItem('smartshield_token');
+        if (!token) { window.location.href = '/login'; }
+      })();
+    </script>
+
+    <!-- ====== MAP ====== -->
+    <div id="map"></div>
+
+    <!-- ====== TOP-LEFT: Title & Legend ====== -->
+    <div class="overlay panel-top-left">
+      <div class="glass-panel panel-title">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+          <h1>
+            SmartShield
+            <span class="badge-ai">AI</span>
+          </h1>
+          <button id="btn-logout" style="background:rgba(255,59,59,0.12);border:1px solid rgba(255,59,59,0.2);color:#ff3b3b;font-size:0.65rem;padding:0.3rem 0.7rem;border-radius:999px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:500;transition:0.3s" onmouseover="this.style.background='rgba(255,59,59,0.25)'" onmouseout="this.style.background='rgba(255,59,59,0.12)'">Logout</button>
+        </div>
+        <p class="subtitle">
+          Phishing Hotspot Intelligence — Uttarakhand
+        </p>
+        <p id="user-greeting" style="font-size:0.68rem;color:#8896ab;margin-bottom:0.4rem"></p>
+
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          Live Monitoring Active
+        </div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-dot high"></span> High Risk
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot medium"></span> Medium Risk
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot low"></span> Low Risk
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== TOP-RIGHT: Filters ====== -->
+    <div class="overlay panel-top-right">
+      <div class="glass-panel">
+        <div class="filter-group">
+          <div class="filter-label">Time Range</div>
+          <div class="pill-row">
+            <button class="pill active">24h</button>
+            <button class="pill">7d</button>
+            <button class="pill">30d</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label">Attack Type</div>
+          <div class="pill-row">
+            <button class="pill active">All</button>
+            <button class="pill">SMS</button>
+            <button class="pill">Email</button>
+            <button class="pill">URL</button>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-switch" id="heatmap-toggle"></div>
+          <span class="toggle-label">Heatmap Layer</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== BOTTOM-LEFT: Recent Incidents ====== -->
+    <div class="overlay panel-bottom-left">
+      <div class="glass-panel">
+        <div class="incidents-header">
+          <h3>Recent Incidents</h3>
+          <span class="incidents-count">LIVE</span>
+        </div>
+        <div id="incident-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== BOTTOM-RIGHT: Report Button ====== -->
+    <div class="overlay panel-bottom-right">
+      <button class="btn-report" id="btn-report">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+          />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        Report Incident
+      </button>
+    </div>
+
+    <!-- ====== REPORT MODAL ====== -->
+    <div class="modal-backdrop" id="report-modal">
+      <div class="modal" style="position: relative">
+        <button class="modal-close" id="modal-close">&times;</button>
+        <h2>Report Incident</h2>
+        <p class="modal-sub">
+          Submit a suspected phishing link or message for AI analysis
+        </p>
+
+        <form id="report-form">
+          <div class="form-group">
+            <label for="report-link">Suspicious Link / Message</label>
+            <textarea
+              id="report-link"
+              name="link"
+              placeholder="Paste the suspicious URL or message..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="report-type">Attack Type</label>
+            <select id="report-type" name="type">
+              <option value="sms">SMS Phishing</option>
+              <option value="email">Email Phishing</option>
+              <option value="url">Malicious URL</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="report-location">Location</label>
+            <select id="report-location" name="location">
+              <option value="dehradun">Dehradun</option>
+              <option value="haridwar">Haridwar</option>
+              <option value="rishikesh">Rishikesh</option>
+              <option value="haldwani">Haldwani</option>
+              <option value="nainital">Nainital</option>
+              <option value="uttarkashi">Uttarkashi</option>
+              <option value="pithoragarh">Pithoragarh</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            Submit for Analysis
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ====== SCRIPTS ====== -->
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <!-- Leaflet Heat -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- App Modules (order matters) -->
+    <script src="js/data/hotspots.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Auth: user greeting + logout -->
+    <script>
+      (function() {
+        // Show user greeting
+        try {
+          var user = JSON.parse(localStorage.getItem('smartshield_user'));
+          if (user && user.name) {
+            var el = document.getElementById('user-greeting');
+            if (el) el.textContent = 'Welcome, ' + user.name;
+          }
+        } catch(e) {}
+
+        // Logout handler
+        var logoutBtn = document.getElementById('btn-logout');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('smartshield_token');
+            localStorage.removeItem('smartshield_user');
+            window.location.href = '/login';
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
